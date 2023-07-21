@@ -1,6 +1,8 @@
 
 <div align="center"> <img src="NEOSTELLARlogov2.png" width="600"> </div>
 
+> **Before reading this file, as Neo Stellar, we will not continue the work of our 2.4 GHz module in the future due to the fact that we cannot find suitable parts and the supply of parts is expensive. But we'll include the code for E28 (SX1280).**
+ 
 # NeoLink 2.4 Ghz Telemetry Module
 
 NeoLink is a long-range radio telemetry module based on LoRa technology, operating in the 2.4GHz band.
