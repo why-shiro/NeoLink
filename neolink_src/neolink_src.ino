@@ -1,3 +1,4 @@
+#include <pitches.h>
 #include <Wire.h>
 #include <Keypad.h>
 #include <sstream>
@@ -9,6 +10,7 @@
 
 uint32_t RXpacketCount;
 uint32_t errors;
+bool device_var = false;
 
 uint8_t RXBUFFER[RXBUFFER_SIZE];                 //create the buffer that received packets are copied into
 
@@ -81,7 +83,6 @@ void setup()
     Serial.println(F("103_LoRa_Transmitter_Detailed_Setup Starting"));
 
     SPI.begin();
-    LoRa_INIT();
     lcd.clear();
     updateMenu();
 }
@@ -259,8 +260,9 @@ void executeAction()
             uint8_t *buff = (uint8_t *)concatenatedString.c_str();
             uint8_t size = concatenatedString.length();
             transfer(buff, size);
+            
         }
-
+        device_var=false;
         break;
     case 3:
 key1 = 0;
@@ -273,6 +275,7 @@ key1 = 0;
             }
             receiver();
         }
+        device_var=false;
 break;
 
 
@@ -379,6 +382,13 @@ void led_Flash(uint16_t flashes, uint16_t delaymS)
 
 void transfer(uint8_t *buff, uint8_t size)
 {
+     if (!device_var) {
+    // Call your function here
+     LoRa_INIT();
+
+    // Set the flag to true to prevent the function from running again
+    device_var = true;
+  }
     Serial.print(TXpower); //print the transmit power defined
     Serial.print(F("dBm "));
     Serial.print(F("Packet> "));
@@ -480,6 +490,13 @@ void packet_is_Error_RX()
 }
 
 void receiver(){
+  if (!device_var) {
+    // Call your function here
+     LoRa_INIT();
+
+    // Set the flag to true to prevent the function from running again
+    device_var = true;
+  }
   RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 3000, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
 
   digitalWrite(LED1, HIGH);                      //something has happened

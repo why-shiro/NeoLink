@@ -24,11 +24,13 @@
 #define DIO1 35                                 //DIO1 pin on LoRa device, used for RX and TX done 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
-#define RX_EN 15                                //pin for RX enable, used on some SX128X devices, set to -1 if not used
-#define TX_EN 26                                //pin for TX enable, used on some SX128X devices, set to -1 if not used 
+#define RX_EN 13                                //pin for RX enable, used on some SX128X devices, set to -1 if not used
+#define TX_EN 12                                //pin for TX enable, used on some SX128X devices, set to -1 if not used 
 #define BUZZER -1                               //pin for buzzer, set to -1 if not used 
 #define VCCPOWER 14                             //pin controls power to external devices
 #define LORA_DEVICE DEVICE_SX1280               //we need to define the device we are using
+
+
 
 
 //*******  Setup LoRa Parameters Here ! ***************
@@ -40,7 +42,9 @@ const uint8_t Bandwidth = LORA_BW_0400;         //LoRa bandwidth
 const uint8_t SpreadingFactor = LORA_SF7;       //LoRa spreading factor
 const uint8_t CodeRate = LORA_CR_4_5;           //LoRa coding rate
 
-const int8_t TXpower = 10;                      //LoRa transmit power in dBm
+const int8_t TXpower = 20;                      //LoRa transmit power in dBm
 
-const uint16_t packet_delay = 500;             //mS delay between packets
+const uint16_t packet_delay = 20;             //mS delay between packets
 
+
+#define RXBUFFER_SIZE 32      
