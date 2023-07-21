@@ -45,7 +45,7 @@ NeoLink Module 3 --x NeoLink Module 2: I want to pair with you too! (No response
 
 **This graph show how data transmitting works:**
 
-> In NeoLink, every **20ms** is considered as **one tick.**
+> In our module, each tick is calculated by the ESP32 before it is sent.
 
 ```mermaid
 sequenceDiagram
