@@ -53,7 +53,7 @@ NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tic
 NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tick )
 NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you, do you need to send me anything? (tick)
 NeoLink Module 2 ->> NeoLink Module 2: Checks for update
-NeoLink Module 2 ->> NeoLink Module 1: Oh, I have very important updates that I need to send you (tick)
+NeoLink Module 2 ->> NeoLink Module 1: Oh, I have very important updates which I need to send you (tick)
 NeoLink Module 1 ->> NeoLink Module 1: Updates itself with new data
 NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tick )
 NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tick )
