@@ -5,15 +5,17 @@
 #include <SPI.h>
 #include <SX128XLT.h>
 #include "Settings.h"
+#include <vector>
+
 
 #define Program_Version "V1.1"
-
+int count=0;
 uint32_t RXpacketCount;
 uint32_t errors;
 bool device_var = false;
-
+bool checker2 = false;
 uint8_t RXBUFFER[RXBUFFER_SIZE];                 //create the buffer that received packets are copied into
-
+uint8_t teste[]="testing";
 uint8_t RXPacketL;                               //stores length of packet received
 int16_t PacketRSSI;                              //stores RSSI of received packet
 int8_t  PacketSNR;                               //stores signal to noise ratio (SNR) of received packet
@@ -182,7 +184,7 @@ void menuChanger()
     {
         if (key == '#' || key == '*')
         {
-            menu = (menu + (key == '#' ? 1 : 3)) % 4;
+            menu = (menu + (key == '#' ? 1 : 4)) % 5;
             updateMenu();
             delay(100);
             while (kpd.getKey() == key)
@@ -221,12 +223,17 @@ void updateMenu()
     case 2:
         lcd.print("Manual Config");
         lcd.setCursor(0, 1);
-        lcd.print(">Readings");
+        lcd.print(">Transmit");
         break;
     case 3:
-        lcd.print("Readings");
+        lcd.print("Transmit");
         lcd.setCursor(0, 1);
-        lcd.print(">Setting");
+        lcd.print(">Receive");
+        break;
+    case 4:
+        lcd.print("Receive");
+        lcd.setCursor(0, 1);
+        lcd.print(">Both");
         break;
     }
 }
@@ -254,12 +261,13 @@ void executeAction()
                 break;
             }
             updateReadings();
-            std::stringstream butter;
-            butter << pressure << " " << altitude << " " << temperature;
-            std::string concatenatedString = butter.str();
-            uint8_t *buff = (uint8_t *)concatenatedString.c_str();
-            uint8_t size = concatenatedString.length();
-            transfer(buff, size);
+           
+          uint8_t buff[4] = {0}; // Initialize buff to 0
+                  buff[0] = 1;  
+                  buff[1] = pressure;
+                  buff[2] = altitude;
+                  buff[3] = temperature;
+          concatAndTransfer(buff, sizeof(buff));
             
         }
         device_var=false;
@@ -277,12 +285,38 @@ key1 = 0;
         }
         device_var=false;
 break;
-
+case 4:
+key1 = 0;
+        while (true)
+        {
+            key1 = kpd.getKey();
+            if (key1 == '0')
+            {
+                break;
+            }
+            transceiver();
+        }
+        device_var=false;
+break;
 
     
     delay(1000);
 }
 }
+void concatAndTransfer(uint8_t buff[], uint8_t size)
+{
+    std::stringstream str;
+    for (int i = 0; i < size; i++)
+    {
+        if (i != 0)
+            str << ",";
+        str << static_cast<int>(buff[i]);
+    }
+
+    std::string concatenatedString = str.str();
+    transfer(buff, concatenatedString.length());
+}
+
 
 void updateSubMenuSelection()
 {
@@ -497,7 +531,7 @@ void receiver(){
     // Set the flag to true to prevent the function from running again
     device_var = true;
   }
-  RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 3000, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
+  RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 300, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
 
   digitalWrite(LED1, HIGH);                      //something has happened
 
@@ -507,6 +541,7 @@ void receiver(){
   if (RXPacketL == 0)                            //if the LT.receive() function detects an error, RXpacketL is 0
   {
     packet_is_Error_RX();
+    count++;
   }
   else
   {
@@ -516,4 +551,41 @@ void receiver(){
   digitalWrite(LED1, LOW);                       //LED off
 
   Serial.println();
+}
+
+
+void transceiver() {
+  if (!device_var) {
+    LoRa_INIT();
+    device_var = true;
+  }
+
+  // Check the current mode using the private member _OperatingMode
+  if (checker2==false) { // If the current mode is receiver mode
+    // Switch to transmit mode
+    LT.setRfFrequency(Frequency, Offset);
+    transfer(teste, sizeof(teste)); // Assuming you have a function named transfer() that sends packets
+    Serial.println(F("Switched to Transmitter Mode"));
+    checker2=true;
+  } else { // If the current mode is not receiver mode, assume it is transmit mode
+    // Switch to receiver mode
+    Serial.println(F("Switched to Receiver Mode"));
+
+    // Wait for packets to be received
+    while (true) {
+      receiver(); // Assuming you have a function named receiver() that receives packets
+
+      // Check if there are more packets to receive, continue receiving until there are no more
+      if (count==3) {
+        count=0;
+        break; // No more packets, exit the loop
+      }
+    }
+
+    // After receiving all packets, switch back to transmit mode
+    
+    LT.setRfFrequency(Frequency, Offset);
+    Serial.println(F("Switched back to Transmitter Mode"));
+    checker2=false;
+  }
 }
