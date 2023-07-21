@@ -1,3 +1,4 @@
+
 <div align="center"> <img src="NEOSTELLARlogov2.png" width="600"> </div>
 
 # NeoLink 2.4 Ghz Telemetry Module
@@ -57,6 +58,14 @@ NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tic
 ```
 and the loop continues...
 
+## Power Consumption
+
+| Type | Current (mA) | Estimated Time |
+|--|--|--|
+| 10 dDm Isotropic Antenna (without Amp.) | 90 ~ 100| 160 Hrs|
+| 27 dDm Yagi Antenna (with 1W Amp.)  |x| x|
+
+
 ## Safety Protections
 
  - AES-256 Encryption
@@ -65,6 +74,14 @@ and the loop continues...
  - Frequency Hopping Spread Spectrum (FHSS)
 
 For suggestions, please contact us at : info@neostellar.net
+
+## To Do List
+
+| No. | Mission |
+|---|---|
+| 1| Changing Ebyte E28 to another LoRa Module (933mHz Freq.)|
+| 2 |Testing long-range communication with 1W and reporting power consumption (for 933mHz)|
+| 3 |Testing long-range communication with 5W and reporting power consumption (for 933mHz)|
 
 ## Updates
 
