@@ -58,7 +58,7 @@ NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tic
 ```
 and the loop continues...
 
-## Power Consumption
+## Power Consumption Tests
 
 | Type | Current (mA) | Estimated Time |
 |--|--|--|
