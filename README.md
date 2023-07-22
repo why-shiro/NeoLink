@@ -60,11 +60,11 @@ NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tic
 ```
 and the loop continues...
 
-## Power Consumption Tests
+## Power Consumption Tests (20000mAh 5V, 1A Powerbank)
 
 | Type | Current (mA) | Estimated Time |
 |--|--|--|
-| 10 dDm Isotropic Antenna (without Amp.) | 90 ~ 100| 160 Hrs|
+| 10 dDm Isotropic Antenna (without Amp.) | 120 ~ 250| 65 Hrs|
 | 27 dDm Yagi Antenna (with 1W Amp.)  |x| x|
 
 
