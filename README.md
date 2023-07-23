@@ -23,7 +23,7 @@ NeoLink module is used in conjunction with the Ebyte E28 (SX1280) module. To enh
 | Antenna | Power (dB)|Range (km)|
 |--|--|--|
 | Isotropic Antenna | 10dB | 5km (Maximum Range Test)|
-|Yagi Antena with AeroWave Tracker| 10 dB | 5km (within the city) |
+|Yagi Antena with AeroWave Tracker| 10 dB | 3km (within the city) |
 
 The isotropic antenna test was conducted in an open area, in the outdoors. The Yagi antenna test, on the other hand, was performed within the city. **If additional comments are to be added, it should be noted that the Yagi antenna causes packet losses within the city.**
 
@@ -60,11 +60,11 @@ NeoLink Module 1 ->> NeoLink Module 2: This is the data I need to send you ( tic
 ```
 and the loop continues...
 
-## Power Consumption Tests
+## Power Consumption Tests (20000mAh 5V, 1A Powerbank)
 
 | Type | Current (mA) | Estimated Time |
 |--|--|--|
-| 10 dDm Isotropic Antenna (without Amp.) | 90 ~ 100| 160 Hrs|
+| 10 dDm Isotropic Antenna (without Amp.) | 120 ~ 250| 65 Hrs|
 | 27 dDm Yagi Antenna (with 1W Amp.)  |x| x|
 
 
