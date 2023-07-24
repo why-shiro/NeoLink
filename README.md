@@ -2,6 +2,8 @@
 <div align="center"> <img src="NEOSTELLARlogov2.png" width="600"> </div>
 
 > **Before reading this file, as Neo Stellar, we will not continue the work of our 2.4 GHz module in the future due to the fact that we cannot find suitable parts and the supply of parts is expensive. But we'll include the code for E28 (SX1280).**
+
+> > **W.I.P!! We do not suggest you working on this code or building projects with this code!!**
  
 # NeoLink 2.4 Ghz Telemetry Module
 
