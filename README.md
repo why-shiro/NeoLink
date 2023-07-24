@@ -69,6 +69,13 @@ and the loop continues...
 | 10 dDm Isotropic Antenna (without Amp.) | 120 ~ 250| 65 Hrs|
 | 27 dDm Yagi Antenna (with 1W Amp.)  |x| x|
 
+## Multi-Frequency Performance Test (NEW)
+
+Multi-Frequency mode helps you to send your flight data on different frequencies to make transmission more secure and lowers the success rate of the jammer attack on the drone.
+
+| Range (Km) | Total Data Sent | Lost Packages | Success Rate (%)|
+|--|--|--|--|
+| 0.1| 2000| 2|99.9|
 
 ## Safety Protections
 
