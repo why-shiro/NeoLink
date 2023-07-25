@@ -76,6 +76,7 @@ Multi-Frequency mode helps you to send your flight data on different frequencies
 | Range (Km) | Total Data Sent | Lost Packages | Success Rate (%)|
 |--|--|--|--|
 | 0.1| 2000| 2|99.9|
+|0.1|12000|5|99.96|
 
 ## Safety Protections
 
