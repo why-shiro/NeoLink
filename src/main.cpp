@@ -16,10 +16,11 @@ uint32_t RXpacketCount;
 uint32_t errors;
 bool device_var = false;
 bool rx_mode = false;
+bool setupMode = false;
 uint32_t current_freq = 2445000000;
 uint32_t new_freq = 0;
 uint8_t RXBUFFER[RXBUFFER_SIZE];                 //create the buffer that received packets are copied into
-uint8_t jsonBuffer[100]; 
+uint8_t jsonBuffer[100];
 uint8_t teste[]="testing";
 uint8_t RXPacketL;                               //stores length of packet received
 int16_t PacketRSSI;                              //stores RSSI of received packet
@@ -92,33 +93,40 @@ uint8_t butter[] = "testing";
 
 void setup()
 {
-    Wire.begin();
-    myPressure.begin();                // Get sensor online
-    myPressure.setModeAltimeter();     // Measure altitude above sea level in meters
-    myPressure.setOversampleRate(4);   // Set Oversample to the recommended 128
-    myPressure.enableEventFlags();
-    lcd.init();
-    kpd.begin();
-    lcd.backlight();
-    lcd.setCursor(0, 0);
-    Serial.begin(9600);
-    lcd.print("Initializing...");
-    lcd.setCursor(0, 1);
-    lcd.print("NeoStellar v1.0");
-    delay(1500);
+    if (!setupMode)
+    {
+        Wire.begin();
+        myPressure.begin();                // Get sensor online
+        myPressure.setModeAltimeter();     // Measure altitude above sea level in meters
+        myPressure.setOversampleRate(4);   // Set Oversample to the recommended 128
+        myPressure.enableEventFlags();
+        lcd.init();
+        kpd.begin();
+        lcd.backlight();
+        lcd.setCursor(0, 0);
+        Serial.begin(9600);
+        lcd.print("Initializing...");
+        lcd.setCursor(0, 1);
+        lcd.print("NeoStellar v1.0");
+        delay(1500);
 
-    pinMode(LED1, OUTPUT);
-    led_Flash(2, 125);
-    Serial.println();
-    Serial.print(F(__TIME__));
-    Serial.print(F(" "));
-    Serial.println(F(__DATE__));
-    Serial.println(F(Program_Version));
-    Serial.println();
-    Serial.println(F("103_LoRa_Transmitter_Detailed_Setup Starting"));
-    SPI.begin();
-    lcd.clear();
-    updateMenu();
+        pinMode(LED1, OUTPUT);
+        led_Flash(2, 125);
+        Serial.println();
+        Serial.print(F(__TIME__));
+        Serial.print(F(" "));
+        Serial.println(F(__DATE__));
+        Serial.println(F(Program_Version));
+        Serial.println();
+        Serial.println(F("103_LoRa_Transmitter_Detailed_Setup Starting"));
+        SPI.begin();
+        lcd.clear();
+        updateMenu();
+        setupMode = true;
+    }else{
+        Serial.println("Passing Init");
+    }
+    
 }
 
 
@@ -295,7 +303,7 @@ void executeAction()
             updateReadings();
            
           uint8_t buff[4] = {0}; // Initialize buff to 0
-                  buff[0] = 1;  
+                  buff[0] = 1;
                   buff[1] = pressure;
                   buff[2] = altitude;
                   buff[3] = temperature;
@@ -466,7 +474,6 @@ void transfer(uint8_t *buff, uint8_t size)
 
     digitalWrite(LED1, HIGH);
     startmS = millis(); //start transmit timer
-    Serial.print(F("Milis aşıldı"));
     if (LT.transmit(buff, TXPacketL, 1000, TXpower, WAIT_TX)) //will return packet length sent if OK, otherwise 0 if transmit error
     {
         endmS = millis(); //packet sent, note end time
@@ -479,6 +486,15 @@ void transfer(uint8_t *buff, uint8_t size)
     }
 
     digitalWrite(LED1, LOW);
+    uint32_t bosBellek = ESP.getFreeHeap();
+
+    // Maksimum bellek boyutunu al
+    uint32_t maksimumBellek = ESP.getHeapSize();
+
+    uint32_t kullanilanBellek = maksimumBellek - bosBellek;
+
+    Serial.println();
+    Serial.print("Bellek Durumu:"); Serial.print(kullanilanBellek); Serial.print("/"); Serial.print(maksimumBellek);
     Serial.println();
     delay(packet_delay);
 }
@@ -552,7 +568,7 @@ void packet_is_Error_RX()
     LT.printIrqStatus();                            //print the names of the IRQ registers set
   }
 
-  delay(250);                                       //gives a longer buzzer and LED flash for error 
+  delay(250);                                       //gives a longer buzzer and LED flash for error
   
 }
 
@@ -604,7 +620,7 @@ uint32_t getRandomFrequency() {
     uint32_t randomValue = esp_random();
     
     uint32_t min_freq = 2445000000;
-    uint32_t max_freq = 2494900000; 
+    uint32_t max_freq = 2494900000;
     
     uint32_t freq_step = 10000000;
 
@@ -636,6 +652,7 @@ void transceiver() {
     uint8_t copiedData[ix];
     copyDataToArray(prepare_text, copiedData, ix+2);
     transfer(copiedData, ix+2);
+    delete[] prepare_text;
     current_freq = new_freq;
     LT.setRfFrequency(new_freq, Offset);
   }
