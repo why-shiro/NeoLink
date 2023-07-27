@@ -7,21 +7,21 @@
 #include <random>
 #include <cstdint>
 #include <cstring>
-#include <Crypto.h>
-#include <AES.h>
 
 #define Program_Version "V1.1"
 int count=0;
 uint32_t RXpacketCount;
 uint32_t errors;
 bool device_var = false;
-bool rx_mode = false;
 bool setupMode = false;
+bool pairMode = true;
 uint32_t current_freq = 2445000000;
 uint32_t new_freq = 0;
 uint8_t RXBUFFER[RXBUFFER_SIZE];                 //create the buffer that received packets are copied into
-uint8_t jsonBuffer[100];
-uint8_t teste[]="testing";
+uint8_t jsonBuffer[100]; 
+uint8_t sendDataBuffer[]="SEND_DATA";
+uint8_t pairBuffer[]="LOOKING_FOR_PAIR";
+uint8_t OK_STATUS_Buffer[]="OK";
 uint8_t RXPacketL;                               //stores length of packet received
 int16_t PacketRSSI;                              //stores RSSI of received packet
 int8_t  PacketSNR;                               //stores signal to noise ratio (SNR) of received packet
@@ -54,6 +54,8 @@ int gettingNum();
 uint8_t* generateTransmitData(uint8_t data[], uint32_t freq, bool rx);
 void copyDataToArray(const uint8_t* source, uint8_t destination[], size_t size);
 uint32_t getFrequencyValue(const uint8_t jsonString[], size_t size);
+bool getRxValue(const uint8_t jsonString[], size_t size);
+uint8_t* getDataFromJSON(const uint8_t jsonString[]);
 
 //Barometer Config
 
@@ -303,7 +305,7 @@ void executeAction()
             updateReadings();
            
           uint8_t buff[4] = {0}; // Initialize buff to 0
-                  buff[0] = 1;
+                  buff[0] = 1;  
                   buff[1] = pressure;
                   buff[2] = altitude;
                   buff[3] = temperature;
@@ -486,15 +488,6 @@ void transfer(uint8_t *buff, uint8_t size)
     }
 
     digitalWrite(LED1, LOW);
-    uint32_t bosBellek = ESP.getFreeHeap();
-
-    // Maksimum bellek boyutunu al
-    uint32_t maksimumBellek = ESP.getHeapSize();
-
-    uint32_t kullanilanBellek = maksimumBellek - bosBellek;
-
-    Serial.println();
-    Serial.print("Bellek Durumu:"); Serial.print(kullanilanBellek); Serial.print("/"); Serial.print(maksimumBellek);
     Serial.println();
     delay(packet_delay);
 }
@@ -568,48 +561,42 @@ void packet_is_Error_RX()
     LT.printIrqStatus();                            //print the names of the IRQ registers set
   }
 
-  delay(250);                                       //gives a longer buzzer and LED flash for error
+  delay(250);                                       //gives a longer buzzer and LED flash for error 
   
 }
 
 void receiver(){
   if (!device_var) {
-    // Call your function here
-     LoRa_INIT();
+        // Call your function here
+        LoRa_INIT();
+        // Set the flag to true to prevent the function from running again
+        device_var = true;
+    }
+    RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 1000, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
 
-    // Set the flag to true to prevent the function from running again
-    device_var = true;
-  }
-  RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 1000, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
+    uint32_t next_freq = getFrequencyValue(RXBUFFER,RXBUFFER_SIZE);
 
-  uint32_t next_freq = getFrequencyValue(RXBUFFER,64);
+    if (next_freq == 0){
+        next_freq = 2445000000; // Fallback Freq
+    }
 
-  if (next_freq == 0){
-    next_freq = 2445000000; // Fallback Freq
-  }
+    digitalWrite(LED1, HIGH);                      //something has happened
+    PacketRSSI = LT.readPacketRSSI();              //read the recived RSSI value
+    PacketSNR = LT.readPacketSNR();                //read the received SNR value
+        
+    if (RXPacketL == 0)                            //if the LT.receive() function detects an error, RXpacketL is 0
+    {
+        packet_is_Error_RX();
+        count++;
+    }
+    else
+    {
+        packet_is_OK_RX();
+    }
+    LT.setRfFrequency(next_freq, Offset);
+    digitalWrite(LED1, LOW);
+    Serial.println();
 
-  Serial.println("Recieved Freq: "); Serial.print(next_freq); Serial.print("\n");
-
-  digitalWrite(LED1, HIGH);                      //something has happened
-
-  PacketRSSI = LT.readPacketRSSI();              //read the recived RSSI value
-  PacketSNR = LT.readPacketSNR();                //read the received SNR value
-
-  if (RXPacketL == 0)                            //if the LT.receive() function detects an error, RXpacketL is 0
-  {
-    packet_is_Error_RX();
-    count++;
-  }
-  else
-  {
-    packet_is_OK_RX();
-  }
-
-  LT.setRfFrequency(next_freq, Offset);
-
-  digitalWrite(LED1, LOW);
-
-  Serial.println();
 }
 
 size_t getJsonSize(const uint8_t data[], uint32_t freq, bool rx) {
@@ -620,7 +607,7 @@ uint32_t getRandomFrequency() {
     uint32_t randomValue = esp_random();
     
     uint32_t min_freq = 2445000000;
-    uint32_t max_freq = 2494900000;
+    uint32_t max_freq = 2494900000; 
     
     uint32_t freq_step = 10000000;
 
@@ -633,31 +620,84 @@ uint32_t getRandomFrequency() {
     return random_freq;
 }
 
-
-void transceiver() {
-  if (!device_var) {
-    LoRa_INIT();
-    device_var = true;
-  }
-
-  if(!rx_mode){
-    new_freq = getRandomFrequency();
-    Serial.println("New Frequancy: "); Serial.print(new_freq); Serial.print("\n");
-    Serial.println("Old Frequancy: "); Serial.print(current_freq); Serial.print("\n");
-    uint8_t* prepare_text = generateTransmitData(teste,new_freq,true);
+void transferBuilderWithoutFreqChange(uint8_t buff[]){
+    uint8_t* prepare_text = generateTransmitData(buff,LT.getFreqInt(),true);
     int ix = 0;
     for (uint8_t i = 0; prepare_text[i] != '}'; ++i) {
-        ix++;
+            ix++;
     }
     uint8_t copiedData[ix];
     copyDataToArray(prepare_text, copiedData, ix+2);
     transfer(copiedData, ix+2);
     delete[] prepare_text;
-    current_freq = new_freq;
-    LT.setRfFrequency(new_freq, Offset);
-  }
+}
 
-  
+void transferBuilderWithFreqChange(uint8_t buff[]){
+    new_freq = getRandomFrequency();
+    uint8_t* prepare_text = generateTransmitData(buff,new_freq,true);
+    int ix = 0;
+    for (uint8_t i = 0; prepare_text[i] != '}'; ++i) {
+            ix++;
+    }
+    uint8_t copiedData[ix];
+    copyDataToArray(prepare_text, copiedData, ix+2);
+    transfer(copiedData, ix+2);
+    delete[] prepare_text;
+    LT.setRfFrequency(new_freq,0);
+}
+
+void transferBuilder(uint8_t buff[], uint32_t freq){
+    uint8_t* prepare_text = generateTransmitData(buff,freq,true);
+    int ix = 0;
+    for (uint8_t i = 0; prepare_text[i] != '}'; ++i) {
+            ix++;
+    }
+    uint8_t copiedData[ix];
+    copyDataToArray(prepare_text, copiedData, ix+2);
+    transfer(copiedData, ix+2);
+    delete[] prepare_text;
+}
+
+void transceiver() {
+    if (!device_var) {
+        LoRa_INIT();
+        device_var = true;
+    }
+
+    //SEND DATA FOR PAIRING (TX)
+    if (pairMode)
+    {
+        //PAIR FREQUENCY
+        LT.setRfFrequency(2445000000, Offset);
+
+        while (true)
+        {
+            transferBuilderWithoutFreqChange(pairBuffer);
+
+            RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 3000, WAIT_RX);
+            uint8_t* data = getDataFromJSON(RXBUFFER);
+            uint8_t* dataPtr = data;
+            if (data)
+            {
+                if (std::memcmp(dataPtr, OK_STATUS_Buffer, sizeof(OK_STATUS_Buffer)) == 0)
+                {
+                    Serial.println("Returned OK status, prepairing communication...");
+                    pairMode = false;
+                    LT.setRfFrequency(2445000000, Offset);
+                    memset(RXBUFFER, 0, RXBUFFER_SIZE);
+                    RXBUFFER[RXBUFFER_SIZE];
+                    delay(5000);
+                    break;
+                }
+                
+            }
+
+        }
+
+    }
+
+    // After Pair
+    
 }
 
 uint8_t* generateTransmitData(uint8_t data[], uint32_t freq, bool rx) {
@@ -754,4 +794,47 @@ uint32_t getFrequencyValue(const uint8_t jsonString[], size_t size) {
 
     uint32_t freqValue = std::stoul(freqValueStr);
     return freqValue;
+}
+
+bool getRxValue(const uint8_t jsonString[], size_t size) {
+    const char* searchStr = reinterpret_cast<const char*>(jsonString);
+    size_t searchSize = size;
+
+    const char* rxKey = "\"rx\": ";
+    const char* rxKeyPos = std::strstr(searchStr, rxKey);
+    if (!rxKeyPos) {
+        return false;
+    }
+
+    rxKeyPos += std::strlen(rxKey);
+    if (std::strncmp(rxKeyPos, "true", 4) == 0) {
+        return true;
+    } else if (std::strncmp(rxKeyPos, "false", 5) == 0) {
+        return false;
+    }
+
+    return false;
+}
+
+uint8_t* getDataFromJSON(const uint8_t jsonString[]) {
+    const char* dataKey = "\"data\": \"";
+    const char* dataStart = reinterpret_cast<const char*>(std::strstr(reinterpret_cast<const char*>(jsonString), dataKey));
+    if (!dataStart) {
+        return nullptr; // "data" anahtarı bulunamadı, nullptr döndür
+    }
+
+    dataStart += std::strlen(dataKey);
+    const char* dataEnd = std::strchr(dataStart, '\"');
+    if (!dataEnd) {
+        return nullptr; // "data" değeri kapanış tırnağı bulunamadı, nullptr döndür
+    }
+
+    size_t dataSize = dataEnd - dataStart;
+    uint8_t* dataBuffer = new uint8_t[dataSize + 1]; // Bellek için yeni dizi oluştur
+    std::strncpy(reinterpret_cast<char*>(dataBuffer), dataStart, dataSize);
+    dataBuffer[dataSize] = '\0';
+
+    Serial.println("Data: "); Serial.print(reinterpret_cast<const char*>(dataBuffer)); Serial.println();
+
+    return dataBuffer;
 }
