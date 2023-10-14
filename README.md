@@ -95,8 +95,8 @@ For suggestions, please contact us at : info@neostellar.net
 |---|---|
 | 1|Implementing TDD algorithm|
 | 2 |Changing Ebyte E28 to another LoRa Module (933mHz Freq.)|
-| 3 |Testing long-range communication with 1W Amp. and reporting power consumption (for 933mHz)|
-| 4 |Testing long-range communication with 5W Amp. and reporting power consumption (for 933mHz)|
+| 3 |Testing long-range communication with 1W Amp. and reporting power consumption (for 933MHz)|
+| 4 |Testing long-range communication with 5W Amp. and reporting power consumption (for 933MHz)|
 
 ## Updates
 
